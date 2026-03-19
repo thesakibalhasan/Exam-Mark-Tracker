@@ -26,13 +26,13 @@
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyAR0t1nIwMEhu5g2XeOHCSy9tlnfzaP5P8",
-    authDomain: "sakib-exammark.firebaseapp.com",
-    projectId: "sakib-exammark",
-    storageBucket: "sakib-exammark.firebasestorage.app",
-    messagingSenderId: "77923054030",
-    appId: "1:77923054030:web:df6392584dc348d1f5bb9f",
-    measurementId: "G-X2KC5CWZY0"
+    apiKey: REACT_APP_API_KEY,
+    authDomain: REACT_APP_AUTH_DOMAIN,
+    projectId: REACT_APP_PROJECT_ID,
+    storageBucket: REACT_APP_STORAGE_BUCKET,
+    messagingSenderId: REACT_APP_MESSAGING_SENDER_ID,
+    appId: REACT_APP_APP_ID,
+    measurementId: REACT_APP_MEASUREMENT_ID
   };
 
   const app = initializeApp(firebaseConfig);
