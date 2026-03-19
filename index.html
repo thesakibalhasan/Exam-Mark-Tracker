@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="description" content="Exam Marks Tracker - Track, analyze and visualize your academic performance">
+<link rel="manifest" href="manifest.json">
+<title>ExamTrack - Academic Performance Tracker</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Iconify -->
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+
+<!-- Chart.js + plugins -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAR0t1nIwMEhu5g2XeOHCSy9tlnfzaP5P8",
+    authDomain: "sakib-exammark.firebaseapp.com",
+    projectId: "sakib-exammark",
+    storageBucket: "sakib-exammark.firebasestorage.app",
+    messagingSenderId: "77923054030",
+    appId: "1:77923054030:web:df6392584dc348d1f5bb9f",
+    measurementId: "G-X2KC5CWZY0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window._db = db;
+  window._fbReady = true;
+  window._collection = collection;
+  window._addDoc = addDoc;
+  window._getDocs = getDocs;
+  window._deleteDoc = deleteDoc;
+  window._doc = doc;
+  window._query = query;
+  window._orderBy = orderBy;
+
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+:root {
+  --bg: #080b10;
+  --bg2: #0d1218;
+  --bg3: #131820;
+  --surface: #161d27;
+  --surface2: #1c2535;
+  --border: #1f2d3d;
+  --border2: #243040;
+  --accent: #00d4ff;
+  --accent2: #0099cc;
+  --accent3: #00ffb3;
+  --warn: #ff4757;
+  --warn2: #ff6b35;
+  --gold: #ffd060;
+  --text: #e8edf5;
+  --text2: #8fa3b8;
+  --text3: #526070;
+  --green: #00e676;
+  --red: #ff1744;
+  --purple: #b388ff;
+
+  --font-display: 'Roboto', sans-serif;
+  --font-body:  'Roboto', sans-serif;
+  --font-mono:  'Roboto', monospace;
+
+  --radius: 12px;
+  --radius2: 8px;
+  --trans: all 0.2s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  /* font-family: var(--font-body); */
+  font-size: 14px;
+  font-family: 'Times New Roman', Times, serif !important;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: 100px !important;
+  margin-bottom: 100px;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orbs */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-wrapper { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.logo-text span { color: var(--accent); }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.install-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius2);
+  color: var(--text2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  transition: var(--trans);
+}
+.install-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
+
+.db-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+}
+.db-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: var(--trans);
+}
+.db-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.db-dot.error { background: var(--red); }
+
+/* ── SUBJECT TABS ── */
+.subject-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.subject-tabs::-webkit-scrollbar { display: none; }
+
+.subject-tab {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text2);
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.subject-tab:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.subject-tab.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(0,255,179,0.08));
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 20px rgba(0,212,255,0.1);
+}
+.subject-tab iconify-icon { font-size: 16px; }
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.card-body { padding: 20px; }
+
+/* ── CATEGORY TABS ── */
+.cat-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 20px 0;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+.cat-tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  border-bottom: 2px solid transparent;
+  transition: var(--trans);
+}
+.cat-tab:hover { color: var(--text2); }
+.cat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 14px; }
+label {
+  display: block;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+input[type="number"], input[type="date"] {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  transition: var(--trans);
+  outline: none;
+  -webkit-appearance: none;
+}
+input[type="number"]:focus, input[type="date"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
+  background: var(--bg2);
+}
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius2);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  transition: var(--trans);
+  border: none;
+  outline: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  color: var(--bg);
+  width: 100%;
+  justify-content: center;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,255,0.2); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-danger {
+  background: rgba(255,23,68,0.1);
+  color: var(--red);
+  border: 1px solid rgba(255,23,68,0.2);
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.btn-danger:hover { background: rgba(255,23,68,0.2); }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── EXAM LIST ── */
+.exam-list { display: flex; flex-direction: column; gap: 10px; }
+.exam-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: var(--trans);
+}
+.exam-item:hover { border-color: var(--border2); }
+
+.exam-item-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.exam-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+}
+.exam-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.exam-scores {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.exam-score-val { color: var(--text2); }
+.exam-pct {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Progress Bar */
+.progress-wrap { position: relative; height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+  background: var(--accent);
+}
+.progress-bar.up { background: var(--green); }
+.progress-bar.down { background: var(--red); box-shadow: 0 0 8px rgba(255,23,68,0.4); }
+.progress-bar.neutral { background: var(--accent); }
+
+.trend-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-family: var(--font-mono);
+  padding: 2px 6px; border-radius: 4px;
+  margin-left: 8px;
+}
+.trend-badge.up { background: rgba(0,230,118,0.12); color: var(--green); }
+.trend-badge.down { background: rgba(255,23,68,0.12); color: var(--red); }
+
+.exam-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+/* ── CHART SECTION ── */
+.chart-controls {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 14px 20px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+select {
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: var(--trans);
+}
+select:focus { border-color: var(--accent); }
+
+.chart-wrapper {
+  position: relative;
+  padding: 20px;
+  height: 320px;
+}
+
+/* ── ANALYSIS SECTION ── */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 16px;
+}
+@media (max-width: 600px) { .analysis-grid { grid-template-columns: 1fr; } }
+
+.analysis-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.analysis-card-label {
+  font-size: 11px; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3); margin-bottom: 6px;
+}
+.analysis-card-val {
+  font-family: var(--font-display);
+  font-size: 20px; font-weight: 800;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+}
+.empty-state iconify-icon { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 13px; }
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 999;
+  transition: opacity 0.4s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-logo {
+  font-family: var(--font-display);
+  font-size: 32px; font-weight: 800;
+  margin-bottom: 24px;
+}
+.loading-logo span { color: var(--accent); }
+.loading-bar-wrap {
+  width: 200px; height: 2px;
+  background: var(--border);
+  border-radius: 999px; overflow: hidden;
+}
+.loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent3));
+  border-radius: 999px;
+  animation: loadingAnim 1.5s ease infinite;
+}
+@keyframes loadingAnim {
+  0% { width: 0%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 999;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(0,230,118,0.4); }
+.toast.error { border-color: rgba(255,23,68,0.4); }
+.toast iconify-icon { font-size: 18px; flex-shrink: 0; }
+.toast.success iconify-icon { color: var(--green); }
+.toast.error iconify-icon { color: var(--red); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-wrapper { height: 240px; }
+  header { flex-wrap: wrap; gap: 10px; }
+}
+
+/* Reset button */
+.btn-ghost {
+  background: none; border: 1px solid var(--border);
+  color: var(--text2); padding: 7px 12px;
+  border-radius: var(--radius2); cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: var(--trans);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.col-span-full { grid-column: 1 / -1; }
+
+.section-label {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text3); margin-bottom: 12px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* Comparison row */
+.comparison-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.comparison-row:last-child { border-bottom: none; }
+.comparison-key { color: var(--text3); font-family: var(--font-mono); font-size: 12px; }
+.comparison-val { font-family: var(--font-display); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">Exam<span>Track</span></div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+</div>
+
+<div class="toast" id="toast">
+  <iconify-icon id="toastIcon" icon="mdi:check-circle"></iconify-icon>
+  <span id="toastMsg">Success</span>
+</div>
+
+<div class="app-wrapper">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <iconify-icon icon="mdi:chart-line" style="color:#080b10;font-size:20px"></iconify-icon>
+      </div>
+      <div>
+        <div class="logo-text">Exam<span>Track</span></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="db-status">
+        <div class="db-dot" id="dbDot"></div>
+        <span id="dbLabel">Connecting</span>
+      </div>
+      <button class="install-btn" id="installBtn" style="display:none">
+        <iconify-icon icon="mdi:download"></iconify-icon>
+        Install App
+      </button>
+    </div>
+  </header>
+
+  <!-- Subject Tabs -->
+  <div class="subject-tabs" id="subjectTabs">
+    <button class="subject-tab active" data-subject="physics">
+      <iconify-icon icon="mdi:atom"></iconify-icon> Physics
+    </button>
+    <button class="subject-tab" data-subject="chemistry">
+      <iconify-icon icon="mdi:flask"></iconify-icon> Chemistry
+    </button>
+    <button class="subject-tab" data-subject="biology">
+      <iconify-icon icon="mdi:dna"></iconify-icon> Biology
+    </button>
+    <button class="subject-tab" data-subject="highermath">
+      <iconify-icon icon="mdi:function-variant"></iconify-icon> Higher Math
+    </button>
+    <button class="subject-tab" data-subject="generalmath">
+      <iconify-icon icon="mdi:calculator"></iconify-icon> General Math
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent"></div>
+</div>
+
+<script>
+// ── STATE ──
+const STATE = {
+  subject: 'physics',
+  category: 'mcq',
+  data: {},      // { subject: { mcq: [...], creative: [...] } }
+  charts: {},
+  chartTypes: {},
+  deferredPrompt: null,
+};
+
+const SUBJECTS = ['physics','chemistry','biology','highermath','generalmath'];
+const SUBJECT_LABELS = {
+  physics: 'Physics', chemistry: 'Chemistry', biology: 'Biology',
+  highermath: 'Higher Math', generalmath: 'General Math'
+};
+const CHART_TYPES = [
+  { value: 'line', label: 'Line Chart' },
+  { value: 'bar', label: 'Bar Chart' },
+  { value: 'area', label: 'Area Chart' },
+  { value: 'pie', label: 'Pie Chart' },
+  { value: 'doughnut', label: 'Doughnut Chart' },
+  { value: 'radar', label: 'Radar Chart' },
+  { value: 'scatter', label: 'Scatter Plot' },
+  { value: 'bubble', label: 'Bubble Chart' },
+  { value: 'stackedbar', label: 'Stacked Bar' },
+  { value: 'mixed', label: 'Mixed Chart' },
+];
+
+// Init data store
+SUBJECTS.forEach(s => { STATE.data[s] = { mcq: [], creative: [] }; });
+
+// ── FIREBASE ──
+let fbReady = false;
+window.addEventListener('firebase-ready', async () => {
+  const db = window._db;
+  fbReady = true;
+  document.getElementById('dbDot').className = 'db-dot connected';
+  document.getElementById('dbLabel').textContent = 'Connected';
+  await loadAllData();
+  hideLoading();
+});
+setTimeout(() => {
+  if (!fbReady) {
+    document.getElementById('dbDot').className = 'db-dot error';
+    document.getElementById('dbLabel').textContent = 'Offline';
+    hideLoading();
+  }
+}, 6000);
+
+async function loadAllData() {
+  try {
+    const col = window._collection(db, 'exams');
+    const snap = await window._getDocs(col);
+    snap.forEach(d => {
+      const r = { id: d.id, ...d.data() };
+      const { subject, category } = r;
+      if (STATE.data[subject] && STATE.data[subject][category]) {
+        STATE.data[subject][category].push(r);
+      }
+    });
+    // Sort by date
+    SUBJECTS.forEach(s => {
+      ['mcq','creative'].forEach(c => {
+        STATE.data[s][c].sort((a,b) => new Date(a.date) - new Date(b.date));
+      });
+    });
+    render();
+  } catch(e) { console.error(e); hideLoading(); }
+}
+
+async function saveExam(entry) {
+  const col = window._collection(db, 'exams');
+  const ref = await window._addDoc(col, entry);
+  return ref.id;
+}
+
+async function deleteExam(id) {
+  const d = window._doc(db, 'exams', id);
+  await window._deleteDoc(d);
+}
+
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  el.classList.add('hidden');
+  setTimeout(() => el.style.display = 'none', 500);
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const i = document.getElementById('toastIcon');
+  const m = document.getElementById('toastMsg');
+  i.setAttribute('icon', type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle');
+  m.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = `toast ${type}`, 3000);
+}
+
+// ── RENDER ──
+function render() {
+  renderSubjectContent();
+}
+
+function getKey() { return `${STATE.subject}_${STATE.category}`; }
+
+function renderSubjectContent() {
+  const s = STATE.subject;
+  const c = STATE.category;
+  const exams = STATE.data[s][c];
+  const key = getKey();
+
+  const chartType = STATE.chartTypes[key] || 'line';
+
+  const html = `
+    <!-- Category Tabs -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="cat-tabs">
+        <div class="cat-tab ${c==='mcq'?'active':''}" onclick="switchCategory('mcq')">
+          <iconify-icon icon="mdi:format-list-checks"></iconify-icon> MCQ
+        </div>
+        <div class="cat-tab ${c==='creative'?'active':''}" onclick="switchCategory('creative')">
+          <iconify-icon icon="mdi:pencil-box"></iconify-icon> Creative / Written
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card-body">
+        ${renderStats(exams)}
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <!-- Left: Form + List -->
+      <div>
+        <!-- Add Form -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <span class="card-title">
+              <iconify-icon icon="mdi:plus-circle"></iconify-icon>
+              Add Exam Record
+            </span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">
+              Auto: Exam ${exams.length + 1}
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Total Marks</label>
+              <input type="number" id="inputTotal" placeholder="e.g. 100" min="1">
+            </div>
+            <div class="form-group">
+              <label>Marks Obtained</label>
+              <input type="number" id="inputObtained" placeholder="e.g. 85" min="0">
+            </div>
+            <div class="form-group">
+              <label>Exam Date</label>
+              <input type="date" id="inputDate" value="${new Date().toISOString().split('T')[0]}">
+            </div>
+            <button class="btn btn-primary" onclick="addExam()" id="addBtn">
+              <iconify-icon icon="mdi:plus"></iconify-icon>
+              Add Exam Record
+            </button>
+          </div>
+        </div>
+
+        <!-- Exam List -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <iconify-icon icon="mdi:clipboard-list"></iconify-icon>
+              Records — ${exams.length}
+            </span>
+          </div>
+          <div class="card-body" style="padding:12px">
+            ${renderExamList(exams)}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Chart + Analysis -->
+      <div>
+        <!-- Chart Card -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="chart-controls">
+            <iconify-icon icon="mdi:chart-box" style="color:var(--text3)"></iconify-icon>
+            <span style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text2);margin-right:auto">Performance Chart</span>
+            <select onchange="changeChartType(this.value)" id="chartTypeSelect">
+              ${CHART_TYPES.map(ct => `<option value="${ct.value}" ${chartType===ct.value?'selected':''}>${ct.label}</option>`).join('')}
+            </select>
+            <button class="btn-ghost" onclick="resetZoom()">
+              <iconify-icon icon="mdi:magnify-minus"></iconify-icon> Reset Zoom
+            </button>
+          </div>
+          <div class="chart-wrapper">
+            ${exams.length < 1 ? `<div class="empty-state" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <iconify-icon icon="mdi:chart-line-variant"></iconify-icon>
+              <p>Add at least one exam to see charts</p>
+            </div>` : `<canvas id="mainChart"></canvas>`}
+          </div>
+        </div>
+
+        <!-- Analysis Card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <iconify-icon icon="mdi:trending-up"></iconify-icon>
+              Performance Analysis
+            </span>
+          </div>
+          ${renderAnalysis(exams)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('mainContent').innerHTML = html;
+
+  if (exams.length >= 1) {
+    setTimeout(() => initChart(exams, chartType), 50);
+  }
+}
+
+function renderStats(exams) {
+  if (!exams.length) return `<div style="text-align:center;color:var(--text3);font-size:13px;padding:10px 0">No records yet</div>`;
+  const pcts = exams.map(e => (e.obtained / e.total) * 100);
+  const avg = pcts.reduce((a,b) => a+b, 0) / pcts.length;
+  const best = Math.max(...pcts);
+  const latest = pcts[pcts.length - 1];
+  return `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" style="font-family: 'Times New Roman', Times, serif;">${latest.toFixed(1)}%</div>
+        <div class="stat-label">Latest</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-family: 'Times New Roman', Times, serif; ">${avg.toFixed(1)}%</div>
+        <div class="stat-label">Average</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-family: 'Times New Roman', Times, serif;">${best.toFixed(1)}%</div>
+        <div class="stat-label">Best</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderExamList(exams) {
+  if (!exams.length) return `
+    <div class="empty-state">
+      <iconify-icon icon="mdi:book-open-blank-variant"></iconify-icon>
+      <p>No exam records found. Add your first record above.</p>
+    </div>`;
+  return `<div class="exam-list">${exams.map((e, i) => renderExamItem(e, i, exams)).join('')}</div>`;
+}
+
+function renderExamItem(e, i, all) {
+  const pct = (e.obtained / e.total * 100);
+  const prev = i > 0 ? (all[i-1].obtained / all[i-1].total * 100) : null;
+  const diff = prev !== null ? pct - prev : null;
+  const dir = diff === null ? 'neutral' : diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral';
+  const trendHtml = diff !== null ? `
+    <span class="trend-badge ${dir}">
+      <iconify-icon icon="${dir==='up'?'mdi:trending-up':'mdi:trending-down'}"></iconify-icon>
+      ${diff > 0 ? '+' : ''}${diff.toFixed(1)}%
+    </span>` : '';
+  return `
+    <div class="exam-item">
+      <div class="exam-item-top">
+        <span class="exam-name">Exam ${i + 1}</span>
+        <span class="exam-date">${formatDate(e.date)}</span>
+      </div>
+      <div class="exam-scores">
+        <iconify-icon icon="mdi:chart-donut" style="color:var(--text3)"></iconify-icon>
+        <span class="exam-score-val">${e.obtained} / ${e.total}</span>
+        <span class="exam-pct" style="color:${dir==='up'?'var(--green)':dir==='down'?'var(--red)':'var(--accent)'}">${pct.toFixed(1)}%</span>
+        ${trendHtml}
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar ${dir}" style="width:${pct}%"></div>
+      </div>
+      <div class="exam-actions">
+        <button class="btn btn-danger" onclick="removeExam('${e.id}','${STATE.subject}','${STATE.category}')">
+          <iconify-icon icon="mdi:delete"></iconify-icon> Remove
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderAnalysis(exams) {
+  if (exams.length < 1) return `<div class="card-body"><div class="empty-state"><iconify-icon icon="mdi:chart-timeline-variant"></iconify-icon><p>Add at least 2 exams to see trends</p></div></div>`;
+
+  const pcts = exams.map(e => (e.obtained / e.total * 100));
+  const avg = pcts.reduce((a,b)=>a+b,0)/pcts.length;
+  const best = Math.max(...pcts);
+  const worst = Math.min(...pcts);
+  const latest = pcts[pcts.length-1];
+  const prev = pcts.length > 1 ? pcts[pcts.length-2] : null;
+  const change = prev !== null ? latest - prev : null;
+
+  let trend = 'stable';
+  if (pcts.length >= 3) {
+    const last3 = pcts.slice(-3);
+    if (last3[2] > last3[0]) trend = 'improving';
+    else if (last3[2] < last3[0]) trend = 'declining';
+  }
+
+  const comparisons = [
+    { key: 'Total Exams', val: exams.length, color: 'var(--accent)' },
+    { key: 'Average Score', val: avg.toFixed(1) + '%', color: 'var(--accent)' },
+    { key: 'Best Score', val: best.toFixed(1) + '%', color: 'var(--green)' },
+    { key: 'Lowest Score', val: worst.toFixed(1) + '%', color: 'var(--red)' },
+    { key: 'Latest Score', val: latest.toFixed(1) + '%', color: 'var(--accent3)' },
+    { key: 'Change (Last)', val: change !== null ? (change > 0 ? '+' : '') + change.toFixed(1) + '%' : 'N/A', color: change === null ? 'var(--text3)' : change >= 0 ? 'var(--green)' : 'var(--red)' },
+    { key: 'Overall Trend', val: trend.charAt(0).toUpperCase()+trend.slice(1), color: trend==='improving'?'var(--green)':trend==='declining'?'var(--red)':'var(--gold)' },
+  ];
+
+  return `
+    <div style="padding:16px">
+      ${comparisons.map(c => `
+        <div class="comparison-row">
+          <span class="comparison-key">${c.key}</span>
+          <span class="comparison-val" style="color:${c.color}">${c.val}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── CHART ──
+function initChart(exams, type) {
+  const key = getKey();
+  if (STATE.charts[key]) { STATE.charts[key].destroy(); STATE.charts[key] = null; }
+
+  const canvas = document.getElementById('mainChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const labels = exams.map((e, i) => `Exam ${i+1}`);
+  const pcts = exams.map(e => parseFloat((e.obtained / e.total * 100).toFixed(2)));
+  const scores = exams.map(e => e.obtained);
+
+  const accentColor = '#00d4ff';
+  const greenColor = '#00e676';
+  const purpleColor = '#b388ff';
+
+  let config;
+
+  if (type === 'pie' || type === 'doughnut') {
+    config = {
+      type: type,
+      data: {
+        labels,
+        datasets: [{
+          data: pcts,
+          backgroundColor: pcts.map((_, i) => `hsl(${(i * 37 + 190) % 360}, 80%, 55%)`),
+          borderColor: '#0d1218',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#8fa3b8', font: { family: "'DM Mono'", size: 11 } } },
+          tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}%` } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'radar') {
+    config = {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Score %',
+          data: pcts,
+          backgroundColor: 'rgba(0,212,255,0.1)',
+          borderColor: accentColor,
+          pointBackgroundColor: accentColor,
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          r: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#8fa3b8', backdropColor: 'transparent', font: { size: 10 } },
+            pointLabels: { color: '#8fa3b8', font: { family: "'DM Mono'", size: 10 } },
+            angleLines: { color: 'rgba(255,255,255,0.05)' },
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'scatter') {
+    config = {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Score %',
+          data: pcts.map((p, i) => ({ x: i+1, y: p })),
+          backgroundColor: accentColor,
+          borderColor: accentColor,
+          pointRadius: 7,
+          pointHoverRadius: 10,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070' }, title: { display: true, text: 'Exam #', color: '#526070' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070', callback: v => v+'%' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'bubble') {
+    config = {
+      type: 'bubble',
+      data: {
+        datasets: [{
+          label: 'Performance',
+          data: pcts.map((p, i) => ({ x: i+1, y: p, r: Math.max(5, p/10) })),
+          backgroundColor: pcts.map(p => `rgba(0,212,255,${p/200 + 0.2})`),
+          borderColor: accentColor,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070', callback: v => v+'%' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'stackedbar') {
+    config = {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Obtained', data: scores, backgroundColor: 'rgba(0,212,255,0.7)', stack: 'a' },
+          { label: 'Missed', data: exams.map(e => e.total - e.obtained), backgroundColor: 'rgba(255,71,87,0.3)', stack: 'a' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070' } },
+          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'mixed') {
+    config = {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { type: 'bar', label: 'Score %', data: pcts, backgroundColor: 'rgba(0,212,255,0.3)', borderColor: accentColor, borderWidth: 1, yAxisID: 'y' },
+          { type: 'line', label: 'Trend', data: pcts, borderColor: greenColor, borderWidth: 2, pointBackgroundColor: greenColor, tension: 0.4, fill: false, yAxisID: 'y' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070', callback: v => v+'%' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy' } }
+        }
+      }
+    };
+  } else if (type === 'area') {
+    config = {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Score %',
+          data: pcts,
+          borderColor: accentColor,
+          borderWidth: 2.5,
+          backgroundColor: (ctx) => {
+            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+            gradient.addColorStop(0, 'rgba(0,212,255,0.25)');
+            gradient.addColorStop(1, 'rgba(0,212,255,0.01)');
+            return gradient;
+          },
+          fill: true,
+          tension: 0.45,
+          pointBackgroundColor: accentColor,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+        }]
+      },
+      options: baseLineOptions(true)
+    };
+  } else if (type === 'bar') {
+    config = {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Score %',
+          data: pcts,
+          backgroundColor: pcts.map(p => p >= 80 ? 'rgba(0,230,118,0.6)' : p >= 50 ? 'rgba(0,212,255,0.6)' : 'rgba(255,71,87,0.6)'),
+          borderColor: pcts.map(p => p >= 80 ? '#00e676' : p >= 50 ? '#00d4ff' : '#ff4757'),
+          borderWidth: 1.5,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070', font: { family: "'DM Mono'", size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#526070', callback: v => v+'%' }, beginAtZero: true, max: 100 }
+        },
+        plugins: {
+          legend: { labels: { color: '#8fa3b8' } },
+          zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy' } }
+        }
+      }
+    };
+  } else {
+    // default: line
+    config = {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Score %',
+          data: pcts,
+          borderColor: accentColor,
+          borderWidth: 2.5,
+          backgroundColor: 'rgba(0,212,255,0.08)',
+          fill: false,
+          tension: 0.4,
+          pointBackgroundColor: pcts.map((p, i) => {
+            if (i === 0) return accentColor;
+            return p > pcts[i-1] ? greenColor : p < pcts[i-1] ? '#ff1744' : accentColor;
+          }),
+          pointRadius: 5,
+          pointHoverRadius: 9,
+        }]
+      },
+      options: baseLineOptions(false)
+    };
+  }
+
+  STATE.charts[key] = new Chart(ctx, config);
+}
+
+function baseLineOptions(fill) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: { color: 'rgba(255,255,255,0.04)' },
+        ticks: { color: '#526070', font: { family: "'DM Mono'", size: 11 } }
+      },
+      y: {
+        grid: { color: 'rgba(255,255,255,0.04)' },
+        ticks: { color: '#526070', callback: v => v + '%' },
+        beginAtZero: false,
+      }
+    },
+    plugins: {
+      legend: { labels: { color: '#8fa3b8', font: { family: "'DM Mono'", size: 12 } } },
+      tooltip: {
+        backgroundColor: '#161d27',
+        borderColor: '#1f2d3d',
+        borderWidth: 1,
+        titleColor: '#e8edf5',
+        bodyColor: '#8fa3b8',
+        padding: 10,
+        callbacks: { label: c => ` ${c.parsed.y}%` }
+      },
+      zoom: {
+        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' },
+        pan: { enabled: true, mode: 'xy' }
+      }
+    }
+  };
+}
+
+function resetZoom() {
+  const key = getKey();
+  if (STATE.charts[key]) STATE.charts[key].resetZoom();
+}
+
+// ── ACTIONS ──
+function switchSubject(s) {
+  STATE.subject = s;
+  document.querySelectorAll('.subject-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.subject === s);
+  });
+  render();
+}
+
+function switchCategory(c) {
+  STATE.category = c;
+  render();
+}
+
+function changeChartType(t) {
+  const key = getKey();
+  STATE.chartTypes[key] = t;
+  const exams = STATE.data[STATE.subject][STATE.category];
+  if (exams.length >= 1) initChart(exams, t);
+}
+
+async function addExam() {
+  const total = parseFloat(document.getElementById('inputTotal').value);
+  const obtained = parseFloat(document.getElementById('inputObtained').value);
+  const date = document.getElementById('inputDate').value;
+
+  if (!total || total <= 0) { showToast('Enter valid total marks', 'error'); return; }
+  if (obtained === undefined || obtained === null || isNaN(obtained) || obtained < 0) { showToast('Enter valid marks obtained', 'error'); return; }
+  if (obtained > total) { showToast('Obtained cannot exceed total marks', 'error'); return; }
+  if (!date) { showToast('Select a date', 'error'); return; }
+  if (!fbReady) { showToast('Database not connected', 'error'); return; }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<iconify-icon icon="mdi:loading" class="spin"></iconify-icon> Saving...';
+
+  try {
+    const entry = { subject: STATE.subject, category: STATE.category, total, obtained, date, createdAt: Date.now() };
+    const id = await saveExam(entry);
+    entry.id = id;
+    STATE.data[STATE.subject][STATE.category].push(entry);
+    STATE.data[STATE.subject][STATE.category].sort((a,b) => new Date(a.date) - new Date(b.date));
+    showToast('Exam record saved successfully');
+    render();
+  } catch(e) {
+    console.error(e);
+    showToast('Failed to save. Check connection.', 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:plus"></iconify-icon> Add Exam Record'; }
+  }
+}
+
+async function removeExam(id, subject, category) {
+  if (!confirm('Remove this exam record?')) return;
+  try {
+    await deleteExam(id);
+    STATE.data[subject][category] = STATE.data[subject][category].filter(e => e.id !== id);
+    showToast('Record removed');
+    render();
+  } catch(e) { showToast('Failed to delete', 'error'); }
+}
+
+// ── HELPERS ──
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ── EVENT DELEGATION ──
+document.getElementById('subjectTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.subject-tab');
+  if (tab) switchSubject(tab.dataset.subject);
+});
+
+// ── PWA ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  STATE.deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'flex';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!STATE.deferredPrompt) return;
+  STATE.deferredPrompt.prompt();
+  const { outcome } = await STATE.deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBtn').style.display = 'none';
+    STATE.deferredPrompt = null;
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ── INITIAL RENDER (if firebase takes time) ──
+render();
+</script>
+
+<!-- Spinning animation -->
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; display: inline-block; }
+</style>
+</body>
+</html>
