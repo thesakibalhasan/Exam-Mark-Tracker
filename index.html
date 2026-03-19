@@ -733,13 +733,13 @@ async function loadAllData() {
 }
 
 async function saveExam(entry) {
-  const col = window._collection(db, 'exams');
+const col = window._collection(window._db, 'exams');
   const ref = await window._addDoc(col, entry);
   return ref.id;
 }
 
 async function deleteExam(id) {
-  const d = window._doc(db, 'exams', id);
+  const d = window._doc(window._db, 'exams', id);
   await window._deleteDoc(d);
 }
 
