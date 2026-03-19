@@ -37,6 +37,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  window.db = db;
 
   window._db = db;
   window._fbReady = true;
@@ -713,7 +714,7 @@ setTimeout(() => {
 
 async function loadAllData() {
   try {
-    const col = window._collection(window._db, 'exams');
+    const col = window._collection(window.db, 'exams');
     const snap = await window._getDocs(col);
     snap.forEach(d => {
       const r = { id: d.id, ...d.data() };
@@ -733,7 +734,7 @@ async function loadAllData() {
 }
 
 async function saveExam(entry) {
-const col = window._collection(window._db, 'exams');
+const col = window._collection(window.db, 'exams');
   const ref = await window._addDoc(col, entry);
   return ref.id;
 }
